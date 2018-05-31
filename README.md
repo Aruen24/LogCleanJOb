@@ -12,7 +12,7 @@ access_2013_05_31.log
 ```ruby
 hdfs dfs -put /usr/apache_logs /techbbs
 hdfs中   /techbbs/access_2013_05_30.log
-			 /techbbs/access_2013_05_31.log
+	 /techbbs/access_2013_05_31.log
 ```
        
 ##  运行：
