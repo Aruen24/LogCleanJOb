@@ -10,7 +10,46 @@ access_2013_05_31.log
 日志格式：
 27.19.74.143 - - [30/May/2013:17:38:20 +0800] "GET /static/image/common/faq.gif HTTP/1.1" 200 1127
 ```
-  
+
+## 使用flume将日志导入HDFS
+```ruby
+#bin/flume-ng agent -n a4 -f myagent/a4.conf -c conf -Dflume.root.logger=INFO,console
+#定义agent名， source、channel、sink的名称
+a4.sources = r1
+a4.channels = c1
+a4.sinks = k1
+
+#具体定义source
+a4.sources.r1.type = spooldir
+a4.sources.r1.spoolDir = /usr/apache_logs
+
+#具体定义channel
+a4.channels.c1.type = memory
+a4.channels.c1.capacity = 10000
+a4.channels.c1.transactionCapacity = 100
+
+#定义拦截器，为消息添加时间戳
+a.4sources.r1.interceptors = i1
+a4.sources.r1.interceptors.i1.type = org.apache.flume.interceptor.TimestampInterceptor$Builder
+
+
+#具体定义sink
+a4.sinks.k1.type = hdfs
+a4.sinks.k1.hdfs.path = /techbbs
+a4.sinks.k1.hdfs.filePrefix = events-
+a4.sinks.k1.hdfs.fileType = DataStream
+
+#不按照条数生成文件
+a4.sinks.k1.hdfs.rollCount = 0
+#HDFS上的文件达到128M时生成一个文件
+a4.sinks.k1.hdfs.rollSize = 134217728
+#HDFS上的文件达到60秒生成一个文件
+a4.sinks.k1.hdfs.rollInterval = 60
+
+#组装source、channel、sink
+a4.sources.r1.channels = c1
+a4.sinks.k1.channel = c1
+```
 ## 用linux shell导入
 ```ruby
 hdfs dfs -put /usr/apache_logs /techbbs
