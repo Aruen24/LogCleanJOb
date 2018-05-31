@@ -1,4 +1,7 @@
 # LogCleanJOb
+
+## 日志的文件在data.7z中（原文件数据+清洗后数据）
+
 ## 日志路径
 ```ruby
 /usr/apache_logs
