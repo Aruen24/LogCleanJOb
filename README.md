@@ -36,7 +36,7 @@ hadoop jar logclean.jar demo.LogCleanJobMain /techbbs/access_2013_05_31.log /tec
 hive>CREATE EXTERNAL TABLE techbbs(ip string, atime string, url string) PARTITIONED BY (logdate string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LOCATION '/techbbs/cleaned';
 ```
 
-## 建立了分区表之后，就需要增加一个分区，增加分区的语句如下：（这里主要针对20150425这一天的日志进行分区）
+## 建立了分区表之后，就需要增加一个分区，增加分区的语句如下：（这里主要针对20130530这一天的日志进行分区）
 ```ruby
 hive>ALTER TABLE techbbs ADD PARTITION(logdate='2013_05_30') LOCATION '/techbbs/cleaned/2013_05_30';
 ```
