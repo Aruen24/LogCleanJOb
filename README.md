@@ -41,50 +41,50 @@ hive>ALTER TABLE techbbs ADD PARTITION(logdate='2013_05_30') LOCATION '/techbbs/
 # 使用HQL统计关键指标：
 ## 关键指标之一：PV量
 
-　　页面浏览量即为PV(Page View)，是指所有用户浏览页面的总和，一个独立用户每打开一个页面就被记录1 次。
-	这里，我们只需要统计日志中的记录个数即可，HQL代码如下：
+页面浏览量即为PV(Page View)，是指所有用户浏览页面的总和，一个独立用户每打开一个页面就被记录1 次。
+这里，我们只需要统计日志中的记录个数即可，HQL代码如下：
 ```ruby
-	hive>CREATE TABLE techbbs_pv_2013_05_30 AS SELECT COUNT(1) AS PV FROM techbbs WHERE logdate='2013_05_30';
-	hive> select * from techbbs_pv_2013_05_30;
+hive>CREATE TABLE techbbs_pv_2013_05_30 AS SELECT COUNT(1) AS PV FROM techbbs WHERE logdate='2013_05_30';
+hive> select * from techbbs_pv_2013_05_30;
 ```
   
 ## 关键指标之二：注册用户数
 
-　　该论坛的用户注册页面为member.php，而当用户点击注册时请求的又是member.php?mod=register的url。
-	因此，这里我们只需要统计出日志中访问的URL是member.php?mod=register的即可，HQL代码如下：
+该论坛的用户注册页面为member.php，而当用户点击注册时请求的又是member.php?mod=register的url。
+因此，这里我们只需要统计出日志中访问的URL是member.php?mod=register的即可，HQL代码如下：
 ```ruby
-	hive>CREATE TABLE techbbs_reguser_2013_05_30 AS SELECT COUNT(1) AS REGUSER FROM techbbs WHERE logdate='2013_05_30' AND INSTR(url,'member.php?mod=register')>0;　
-	hive> select * from techbbs_reguser_2013_05_30;
+hive>CREATE TABLE techbbs_reguser_2013_05_30 AS SELECT COUNT(1) AS REGUSER FROM techbbs WHERE logdate='2013_05_30' AND INSTR(url,'member.php?mod=register')>0;　
+hive> select * from techbbs_reguser_2013_05_30;
 ```
   
 ## 关键指标之三：独立IP数
 
-　　一天之内，访问网站的不同独立 IP 个数加和。其中同一IP无论访问了几个页面，独立IP 数均为1。
-	因此，这里我们只需要统计日志中处理的独立IP数即可，在SQL中我们可以通过DISTINCT关键字，在HQL中也是通过这个关键字：
+一天之内，访问网站的不同独立 IP 个数加和。其中同一IP无论访问了几个页面，独立IP 数均为1。
+因此，这里我们只需要统计日志中处理的独立IP数即可，在SQL中我们可以通过DISTINCT关键字，在HQL中也是通过这个关键字：
 ```ruby
-	hive>CREATE TABLE techbbs_ip_2013_05_30 AS SELECT COUNT(DISTINCT ip) AS IP FROM techbbs WHERE logdate='2013_05_30';
-	hive> select * from techbbs_ip_2013_05_30;
+hive>CREATE TABLE techbbs_ip_2013_05_30 AS SELECT COUNT(DISTINCT ip) AS IP FROM techbbs WHERE logdate='2013_05_30';
+hive> select * from techbbs_ip_2013_05_30;
 ```
   
 ## 关键指标之四：跳出用户数
 
-　　只浏览了一个页面便离开了网站的访问次数，即只浏览了一个页面便不再访问的访问次数。
-	这里，我们可以通过用户的IP进行分组，如果分组后的记录数只有一条，那么即为跳出用户。将这些用户的数量相加，就得出了跳出用户数，HQL代码如下：
+只浏览了一个页面便离开了网站的访问次数，即只浏览了一个页面便不再访问的访问次数。
+这里，我们可以通过用户的IP进行分组，如果分组后的记录数只有一条，那么即为跳出用户。将这些用户的数量相加，就得出了跳出用户数，HQL代码如下：
 ```ruby
-	hive>CREATE TABLE techbbs_jumper_2013_05_30 AS SELECT COUNT(1) AS jumper FROM (SELECT COUNT(ip) AS times FROM techbbs WHERE logdate='2013_05_30' GROUP BY ip HAVING times=1) e;
-	hive> select * from techbbs_jumper_2013_05_30;
+hive>CREATE TABLE techbbs_jumper_2013_05_30 AS SELECT COUNT(1) AS jumper FROM (SELECT COUNT(ip) AS times FROM techbbs WHERE logdate='2013_05_30' GROUP BY ip HAVING times=1) e;
+hive> select * from techbbs_jumper_2013_05_30;
 ```
   
 # 将所有关键指标放入一张汇总表中以便于通过Sqoop导出到MySQL
 ## 为了方便通过Sqoop统一导出到MySQL，这里我们借助一张汇总表将刚刚统计到的结果整合起来，通过表连接结合，HQL代码如下：
 ```ruby
-	hive>CREATE TABLE techbbs_2013_05_30 AS SELECT '2013_05_30', a.pv, b.reguser, c.ip, d.jumper FROM techbbs_pv_2013_05_30 a JOIN techbbs_reguser_2013_05_30 b ON 1=1 JOIN techbbs_ip_2013_05_30 c ON 1=1 JOIN techbbs_jumper_2013_05_30 d ON 1=1;
-	报错：FAILED: SemanticException Cartesian products are disabled for safety reasons. If you know what you are doing, please sethive.strict.checks.cartesian.product to false and that hive.mapred.mode is not st to 'strict' to proceed. 
-	Note that if you may get errors or incorrect results if you make a mistake while using some of the unsafe features.
+hive>CREATE TABLE techbbs_2013_05_30 AS SELECT '2013_05_30', a.pv, b.reguser, c.ip, d.jumper FROM techbbs_pv_2013_05_30 a JOIN techbbs_reguser_2013_05_30 b ON 1=1 JOIN techbbs_ip_2013_05_30 c ON 1=1 JOIN techbbs_jumper_2013_05_30 d ON 1=1;
+报错：FAILED: SemanticException Cartesian products are disabled for safety reasons. If you know what you are doing, please sethive.strict.checks.cartesian.product to false and that hive.mapred.mode is not st to 'strict' to proceed. 
+Note that if you may get errors or incorrect results if you make a mistake while using some of the unsafe features.
 	
-	解决：在SQL前面加上如下： 
-	hive> set hive.mapred.mode=nonstrict;
-	hive> CREATE TABLE techbbs_2013_05_30 AS SELECT '2013_05_30', a.pv, b.reguser, c.ip, d.jumper FROM techbbs_pv_2013_05_30 a JOIN techbbs_reguser_2013_05_30 b ON 1=1 JOIN techbbs_ip_2013_05_30 c ON 1=1 JOIN techbbs_jumper_2013_05_30 d ON 1=1;
+解决：在SQL前面加上如下： 
+hive> set hive.mapred.mode=nonstrict;
+hive> CREATE TABLE techbbs_2013_05_30 AS SELECT '2013_05_30', a.pv, b.reguser, c.ip, d.jumper FROM techbbs_pv_2013_05_30 a JOIN techbbs_reguser_2013_05_30 b ON 1=1 JOIN techbbs_ip_2013_05_30 c ON 1=1 JOIN techbbs_jumper_2013_05_30 d ON 1=1;
  ```
 ## 将hive中数据通过sqoop导入到mysql中
 ```ruby
@@ -93,7 +93,7 @@ sqoop export --connect jdbc:mysql://172.30.86.231:3306/techbbs --username root -
 
 ## 查看hive 表在hdfs上的存储路径
 ```ruby
- hive>show create table techbbs_2013_05_30;
- LOCATION
-  'hdfs://bigdata11:9000/user/hive/warehouse/techbbs_2013_05_30'
+hive>show create table techbbs_2013_05_30;
+LOCATION
+'hdfs://bigdata11:9000/user/hive/warehouse/techbbs_2013_05_30'
 ```
